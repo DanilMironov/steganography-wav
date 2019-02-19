@@ -12,11 +12,21 @@ class LSBStuff:
         return data
 
     @staticmethod
-    def get_bin_str_from_bytearray(data: bytearray):
-        bin_str = ''.join('{}'.format(bin(e)[2:]) for e in data)
-        while len(bin_str) % 8 != 0:
-            bin_str = '0' + bin_str
+    def get_bin_str_from_bytearray(data):
+        bin_str = ''
+        for i in range(len(data)):
+            part = bin(data[i])[2:]
+            while len(part) % 8 != 0:
+                part = '0' + part
+            bin_str += part
         return bin_str
+
+    # @staticmethod
+    # def get_bin_str_from_bytearray(data: bytearray):
+    #     bin_str = ''.join('{}'.format(bin(e)[2:]) for e in data)
+    #     while len(bin_str) % 8 != 0:
+    #         bin_str = '0' + bin_str
+    #     return bin_str
 
     @staticmethod
     def get_bin_from_int(byte):
