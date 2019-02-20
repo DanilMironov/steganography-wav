@@ -21,12 +21,17 @@ class LSBStuff:
             bin_str += part
         return bin_str
 
-    # @staticmethod
-    # def get_bin_str_from_bytearray(data: bytearray):
-    #     bin_str = ''.join('{}'.format(bin(e)[2:]) for e in data)
-    #     while len(bin_str) % 8 != 0:
-    #         bin_str = '0' + bin_str
-    #     return bin_str
+    @staticmethod
+    def get_hash(data: bytearray):
+        prime = 31
+        result = 1
+        if len(data) >= 10:
+            for i in range(10):
+                result = prime*result + data[i]
+        else:
+            for element in data:
+                result = prime*result + element
+        return result
 
     @staticmethod
     def get_bin_from_int(byte):
