@@ -6,6 +6,8 @@ class LSBEncoder:
     def __init__(self, path_to_file_to_insert: str, path_to_main_file: str):
         self.inserted_file = Stuff.read_the_file(path_to_file_to_insert)
         self.main_file = Stuff.read_the_file(path_to_main_file)
+        if not self._check_the_opportunity_to_enter():
+            raise Exception("The file you want to write is too large")
         self.index_of_start_of_data = \
             Stuff.find_index_of_the_start_of_data(self.main_file)
         self.bits_per_sample = self._get_bits_per_sample(self.main_file)
@@ -13,12 +15,10 @@ class LSBEncoder:
         self.inserted_hash = Stuff.get_hash(self.inserted_file)
 
     def _check_the_opportunity_to_enter(self):
-        record_unit = 2  # по сколько бит в сэмпл записывается
+        record_unit = 1
         free_bytes_count = len(self.main_file) - self.index_of_start_of_data
-        # количество байтов основного файла куда можно записывать
         cells_to_write_count = (free_bytes_count * 8) // self.bits_per_sample
-        # количество "ячеек" в которое можно записать
-        necessary_count_of_cells = (len(self.inserted_file) * 8) // record_unit + 16
+        necessary_count_of_cells = (len(self.inserted_file) * 8) // record_unit + 64
         return cells_to_write_count >= necessary_count_of_cells
 
     @staticmethod
@@ -51,7 +51,8 @@ class LSBEncoder:
     @staticmethod
     def _create_new_byte_of_data(current_byte, list_of_pairs, i):
         bin_repr_current_byte = Stuff.get_bin_str_from_bytearray(current_byte)
-        current_pairs = Stuff.split_in_two_bits(bin_repr_current_byte)
+        # current_pairs = Stuff.split_in_two_bits(bin_repr_current_byte)
+        current_pairs = list(bin_repr_current_byte)
         current_pairs[-1] = list_of_pairs[i]
         new_byte = Stuff.get_int_from_bin(''.join(current_pairs))
         return new_byte
@@ -76,17 +77,20 @@ class LSBEncoder:
     def inscribe(self):
         bytes_to_describe_length_of_name = 16
         bits_of_name = Stuff.get_bin_str_from_bytearray(self.inserted_name)
-        list_of_pairs_of_name = Stuff.split_in_two_bits(bits_of_name)
+        # list_of_pairs_of_name = Stuff.split_in_two_bits(bits_of_name)
+        list_of_pairs_of_name = list(bits_of_name)
         name_description = self._create_description(list_of_pairs_of_name,
                                                     bytes_to_describe_length_of_name)
         bytes_to_describe_length_of_data = 32
         bits_to_write = Stuff.get_bin_str_from_bytearray(self.inserted_file)  # строка которую записываем
-        list_of_pairs_to_write = Stuff.split_in_two_bits(bits_to_write)
+        # list_of_pairs_to_write = Stuff.split_in_two_bits(bits_to_write)
+        list_of_pairs_to_write = list(bits_to_write)
         length_description = self._create_description(list_of_pairs_to_write,
                                                       bytes_to_describe_length_of_data)
         bytes_to_describe_length_of_hash = 8
         bits_of_hash = Stuff.get_bin_from_int(self.inserted_hash)
-        hash_pairs = Stuff.split_in_two_bits(bits_of_hash)
+        # hash_pairs = Stuff.split_in_two_bits(bits_of_hash)
+        hash_pairs = list(bits_of_hash)
         hash_description = self._create_description(hash_pairs,
                                                     bytes_to_describe_length_of_hash)
         offset = bytes_per_sample = self.bits_per_sample // 8
@@ -108,8 +112,3 @@ class LSBEncoder:
                                          index, offset)
         with open('new_wav.wav', 'wb') as file:
             file.write(self.main_file)
-
-
-if __name__ == '__main__':
-    main = LSBEncoder('117028-large.jpg', 'Joy Division – New Dawn Fades.wav')
-    main.inscribe()
